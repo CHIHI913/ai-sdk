@@ -1,8 +1,15 @@
 "use client";
 
 import { useCompletion } from "@ai-sdk/react";
+import { experimental_useObject as useObject } from "@ai-sdk/react";
 import React from "react";
 import TextareaAutosize from "react-textarea-autosize";
+import { z } from "zod";
+
+// オプションの型定義
+interface OptionData {
+  options?: (string | undefined)[];
+}
 
 export default function Page() {
   const { completion, input, handleSubmit, handleInputChange, isLoading } =
@@ -21,8 +28,27 @@ export default function Page() {
     setEditableCompletion(completion);
   }, [completion]);
 
-  // チップの候補
-  const chipCandidates = ["カレーライス", "かき氷", "ウォーター"];
+  // オプション入力用の状態
+  const [optionInput, setOptionInput] = React.useState("");
+  const handleOptionInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setOptionInput(e.target.value);
+  };
+
+  // useObjectでAPIと連携
+  const {
+    object,
+    submit: handleOptionSubmit,
+    isLoading: optionLoading,
+  } = useObject<OptionData>({
+    api: "http://localhost:3100/api/v1/gpt/option",
+    schema: z.object({
+      options: z.array(z.string().optional()),
+    }),
+  });
+
+  // チップとして表示するオプション（ストリーミング中のデータをそのまま使用）
+  const chipCandidates =
+    object?.options?.filter((opt): opt is string => Boolean(opt)) || [];
 
   // チップクリック時のハンドラ
   const handleChipClick = (candidate: string) => {
@@ -55,7 +81,11 @@ export default function Page() {
             <button
               key={candidate}
               type="button"
-              className="px-3 py-1 rounded-full bg-zinc-200 text-zinc-700 hover:bg-zinc-300 border border-zinc-300 transition"
+              className={`px-3 py-1 rounded-full ${
+                optionLoading
+                  ? "bg-blue-100 text-blue-700 animate-pulse"
+                  : "bg-zinc-200 text-zinc-700 hover:bg-zinc-300"
+              } border border-zinc-300 transition`}
               onClick={() => handleChipClick(candidate)}
             >
               {candidate}
@@ -69,6 +99,31 @@ export default function Page() {
           className="w-full p-2 bg-zinc-100 text-black"
           disabled={isLoading}
         />
+      </form>
+      {/* オプション取得用フォーム */}
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          handleOptionSubmit({ prompt: optionInput });
+        }}
+        style={{ margin: "16px 0" }}
+      >
+        <div className="flex gap-2 items-center">
+          <input
+            value={optionInput}
+            placeholder="オプションを入力..."
+            onChange={handleOptionInputChange}
+            className="p-2 bg-zinc-100 text-black"
+            disabled={optionLoading}
+          />
+          <button
+            type="submit"
+            disabled={optionLoading}
+            className="px-3 py-1 rounded bg-zinc-200 text-zinc-700 hover:bg-zinc-300 border border-zinc-300 transition"
+          >
+            オプションを取得
+          </button>
+        </div>
       </form>
     </div>
   );
