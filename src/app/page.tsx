@@ -6,10 +6,10 @@ import React from "react";
 import TextareaAutosize from "react-textarea-autosize";
 import { z } from "zod";
 
-// オプションの型定義
-interface OptionData {
-  options?: (string | undefined)[];
-}
+export const OptionDataSchema = z.object({
+  options: z.array(z.string().optional()),
+});
+export type OptionData = z.infer<typeof OptionDataSchema>;
 
 export default function Page() {
   const {
@@ -25,9 +25,6 @@ export default function Page() {
     streamProtocol: "text",
   });
 
-  // オプション入力用の状態
-  const [optionInput, setOptionInput] = React.useState("");
-
   // useObjectでAPIと連携
   const {
     object,
@@ -35,19 +32,15 @@ export default function Page() {
     isLoading: optionLoading,
   } = useObject<OptionData>({
     api: "http://localhost:3100/api/v1/gpt/option",
-    schema: z.object({
-      options: z.array(z.string().optional()),
-    }),
+    schema: OptionDataSchema,
   });
 
   // チップとして表示するオプション（ストリーミング中のデータをそのまま使用）
   const chipCandidates =
     object?.options?.filter((opt): opt is string => Boolean(opt)) || [];
 
-  // チップクリック時のハンドラ
-  const handleChipClick = (candidate: string) => {
-    setInput(candidate);
-  };
+  // オプション入力用の状態
+  const [optionInput, setOptionInput] = React.useState("");
 
   return (
     <div className="flex flex-col gap-2">
@@ -77,7 +70,7 @@ export default function Page() {
                   ? "bg-blue-100 text-blue-700 animate-pulse"
                   : "bg-zinc-200 text-zinc-700 hover:bg-zinc-300"
               } border border-zinc-300 transition`}
-              onClick={() => handleChipClick(candidate)}
+              onClick={() => setInput(candidate)}
             >
               {candidate}
             </button>
