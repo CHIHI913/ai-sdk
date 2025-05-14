@@ -4,7 +4,7 @@ import {
   useCompletion,
   experimental_useObject as useObject,
 } from "@ai-sdk/react";
-import React from "react";
+import { useState } from "react";
 import TextareaAutosize from "react-textarea-autosize";
 import { z } from "zod";
 
@@ -21,10 +21,14 @@ export default function Page() {
     handleInputChange,
     isLoading,
     setInput,
+    complete,
   } = useCompletion({
     api: "http://localhost:3100/api/v1/gpt",
     initialInput: "",
     streamProtocol: "text",
+    onFinish: (_prompt, completion) => {
+      setEditableCompletion(completion);
+    },
   });
 
   // useObjectでAPIと連携
@@ -42,20 +46,32 @@ export default function Page() {
     object?.options?.filter((opt): opt is string => Boolean(opt)) || [];
 
   // オプション入力用の状態
-  const [optionInput, setOptionInput] = React.useState("");
+  const [optionInput, setOptionInput] = useState("職種");
+
+  // ユーザー編集用のstate
+  const [editableCompletion, setEditableCompletion] = useState("");
 
   return (
     <div className="flex flex-col gap-2">
       <div className="flex flex-col gap-2 p-2">
         <div className="flex flex-row gap-2">
           <div className="w-24 text-zinc-500">AI:</div>
-          <div className="w-full">
+          <div className="w-full relative">
             <TextareaAutosize
               className="p-2 bg-zinc-100 text-black resize-none"
               style={{ width: "1000px" }}
               minRows={3}
-              value={completion}
+              value={isLoading ? completion : editableCompletion}
+              onChange={(e) => setEditableCompletion(e.target.value)}
             />
+            {isLoading && !completion && (
+              <div
+                className="absolute left-0 top-0 w-full flex items-center justify-center pointer-events-none"
+                style={{ height: 72, background: "rgba(244,244,245,0.7)" }}
+              >
+                <div className="w-3/4 h-6 bg-zinc-300 animate-pulse rounded" />
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -72,7 +88,11 @@ export default function Page() {
                   ? "bg-blue-100 text-blue-700 animate-pulse"
                   : "bg-zinc-200 text-zinc-700 hover:bg-zinc-300"
               } border border-zinc-300 transition`}
-              onClick={() => setInput(candidate)}
+              onClick={() => {
+                // チップをクリックした際に入力欄へ反映し、そのまま送信も行う
+                setInput(candidate);
+                complete(candidate);
+              }}
             >
               {candidate}
             </button>
