@@ -12,14 +12,20 @@ interface OptionData {
 }
 
 export default function Page() {
-  const { completion, input, handleSubmit, handleInputChange, isLoading } =
-    useCompletion({
-      api: "http://localhost:3100/api/v1/gpt",
-      initialInput: "",
-      body: {
-        system: "あなたは転職アドバイザーです。",
-      },
-    });
+  const {
+    completion,
+    input,
+    handleSubmit,
+    handleInputChange,
+    isLoading,
+    setInput,
+  } = useCompletion({
+    api: "http://localhost:3100/api/v1/gpt",
+    initialInput: "",
+    body: {
+      system: "あなたは転職アドバイザーです。",
+    },
+  });
 
   // completionの編集用状態
   const [editableCompletion, setEditableCompletion] =
@@ -30,9 +36,6 @@ export default function Page() {
 
   // オプション入力用の状態
   const [optionInput, setOptionInput] = React.useState("");
-  const handleOptionInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setOptionInput(e.target.value);
-  };
 
   // useObjectでAPIと連携
   const {
@@ -52,9 +55,7 @@ export default function Page() {
 
   // チップクリック時のハンドラ
   const handleChipClick = (candidate: string) => {
-    handleInputChange({
-      target: { value: candidate },
-    } as React.ChangeEvent<HTMLInputElement>);
+    setInput(candidate);
   };
 
   return (
@@ -112,7 +113,7 @@ export default function Page() {
           <input
             value={optionInput}
             placeholder="オプションを入力..."
-            onChange={handleOptionInputChange}
+            onChange={(e) => setOptionInput(e.target.value)}
             className="p-2 bg-zinc-100 text-black"
             disabled={optionLoading}
           />
