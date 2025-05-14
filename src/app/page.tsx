@@ -22,9 +22,7 @@ export default function Page() {
   } = useCompletion({
     api: "http://localhost:3100/api/v1/gpt",
     initialInput: "",
-    body: {
-      system: "あなたは転職アドバイザーです。",
-    },
+    streamProtocol: "text",
   });
 
   // completionの編集用状態
