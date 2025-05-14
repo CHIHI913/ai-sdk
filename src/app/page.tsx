@@ -25,13 +25,6 @@ export default function Page() {
     streamProtocol: "text",
   });
 
-  // completionの編集用状態
-  const [editableCompletion, setEditableCompletion] =
-    React.useState(completion);
-  React.useEffect(() => {
-    setEditableCompletion(completion);
-  }, [completion]);
-
   // オプション入力用の状態
   const [optionInput, setOptionInput] = React.useState("");
 
@@ -66,8 +59,7 @@ export default function Page() {
               className="p-2 bg-zinc-100 text-black resize-none"
               style={{ width: "1000px" }}
               minRows={3}
-              value={editableCompletion}
-              onChange={(e) => setEditableCompletion(e.target.value)}
+              value={completion}
             />
           </div>
         </div>
