@@ -1,7 +1,9 @@
 "use client";
 
-import { useCompletion } from "@ai-sdk/react";
-import { experimental_useObject as useObject } from "@ai-sdk/react";
+import {
+  useCompletion,
+  experimental_useObject as useObject,
+} from "@ai-sdk/react";
 import React from "react";
 import TextareaAutosize from "react-textarea-autosize";
 import { z } from "zod";
