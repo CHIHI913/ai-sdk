@@ -6,8 +6,16 @@ import TextareaAutosize from "react-textarea-autosize";
 import { z } from "zod";
 
 export const JobSummaryCompetencySchema = z.object({
-  jobSummary: z.string(),
-  competency: z.string(),
+  jobSummary: z.string().describe("職務要約は200文字前後で記述。"),
+  competency: z
+    .string()
+    .describe(
+      "箇条書きで記述（1行ごとに1項目、改行区切り）。ここだけ小島よしお風に"
+    ),
+  jobDetails: z
+    .array(z.string().describe("会社ごとに1つの職務詳細を記述"))
+    .length(2)
+    .describe("会社ごとの職務詳細。複数社ある場合は降順で記述"),
 });
 export type JobSummaryCompetency = z.infer<typeof JobSummaryCompetencySchema>;
 
@@ -27,6 +35,8 @@ export default function Page() {
     onFinish: (event) => {
       setEditableJobSummary(event.object?.jobSummary || "");
       setEditableCompetency(event.object?.competency || "");
+      setEditableJobDetail1(event.object?.jobDetails?.[0] || "");
+      setEditableJobDetail2(event.object?.jobDetails?.[1] || "");
     },
   });
 
@@ -50,6 +60,8 @@ export default function Page() {
   // ユーザー編集用のstate
   const [editableJobSummary, setEditableJobSummary] = useState("");
   const [editableCompetency, setEditableCompetency] = useState("");
+  const [editableJobDetail1, setEditableJobDetail1] = useState("");
+  const [editableJobDetail2, setEditableJobDetail2] = useState("");
 
   return (
     <div className="flex flex-col gap-2">
@@ -93,6 +105,54 @@ export default function Page() {
               onChange={(e) => setEditableCompetency(e.target.value)}
             />
             {isLoading && !jobSummaryCompetencyObject?.competency && (
+              <div
+                className="absolute left-0 top-0 w-full flex items-center justify-center pointer-events-none"
+                style={{ height: 72, background: "rgba(244,244,245,0.7)" }}
+              >
+                <div className="w-3/4 h-6 bg-zinc-300 animate-pulse rounded" />
+              </div>
+            )}
+          </div>
+        </div>
+        <div className="flex flex-row gap-2">
+          <div className="w-24 text-zinc-500">AI:</div>
+          <div className="w-full relative">
+            <TextareaAutosize
+              className="p-2 bg-zinc-100 text-black resize-none"
+              style={{ width: "1000px" }}
+              minRows={3}
+              value={
+                isLoading
+                  ? jobSummaryCompetencyObject?.jobDetails?.[0] ?? ""
+                  : editableJobDetail1
+              }
+              onChange={(e) => setEditableJobDetail1(e.target.value)}
+            />
+            {isLoading && !jobSummaryCompetencyObject?.jobDetails?.[0] && (
+              <div
+                className="absolute left-0 top-0 w-full flex items-center justify-center pointer-events-none"
+                style={{ height: 72, background: "rgba(244,244,245,0.7)" }}
+              >
+                <div className="w-3/4 h-6 bg-zinc-300 animate-pulse rounded" />
+              </div>
+            )}
+          </div>
+        </div>
+        <div className="flex flex-row gap-2">
+          <div className="w-24 text-zinc-500">AI:</div>
+          <div className="w-full relative">
+            <TextareaAutosize
+              className="p-2 bg-zinc-100 text-black resize-none"
+              style={{ width: "1000px" }}
+              minRows={3}
+              value={
+                isLoading
+                  ? jobSummaryCompetencyObject?.jobDetails?.[1] ?? ""
+                  : editableJobDetail2
+              }
+              onChange={(e) => setEditableJobDetail2(e.target.value)}
+            />
+            {isLoading && !jobSummaryCompetencyObject?.jobDetails?.[1] && (
               <div
                 className="absolute left-0 top-0 w-full flex items-center justify-center pointer-events-none"
                 style={{ height: 72, background: "rgba(244,244,245,0.7)" }}
