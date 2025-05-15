@@ -1,12 +1,15 @@
 "use client";
 
-import {
-  useCompletion,
-  experimental_useObject as useObject,
-} from "@ai-sdk/react";
+import { experimental_useObject as useObject } from "@ai-sdk/react";
 import { useState } from "react";
 import TextareaAutosize from "react-textarea-autosize";
 import { z } from "zod";
+
+export const JobSummaryCompetencySchema = z.object({
+  jobSummary: z.string(),
+  competency: z.string(),
+});
+export type JobSummaryCompetency = z.infer<typeof JobSummaryCompetencySchema>;
 
 export const OptionDataSchema = z.object({
   options: z.array(z.string().optional()),
@@ -14,26 +17,38 @@ export const OptionDataSchema = z.object({
 export type OptionData = z.infer<typeof OptionDataSchema>;
 
 export default function Page() {
+  // const {
+  //   completion,
+  //   input,
+  //   handleSubmit,
+  //   handleInputChange,
+  //   isLoading,
+  //   setInput,
+  //   complete,
+  // } = useCompletion({
+  //   api: "http://localhost:3100/api/v1/gpt",
+  //   initialInput: "",
+  //   streamProtocol: "text",
+  //   onFinish: (_prompt, completion) => {
+  //     setEditableCompletion(completion);
+  //   },
+  // });
   const {
-    completion,
-    input,
-    handleSubmit,
-    handleInputChange,
+    object: jobSummaryCompetencyObject,
+    submit: handleSubmit,
     isLoading,
-    setInput,
-    complete,
-  } = useCompletion({
+  } = useObject<JobSummaryCompetency>({
     api: "http://localhost:3100/api/v1/gpt",
-    initialInput: "",
-    streamProtocol: "text",
-    onFinish: (_prompt, completion) => {
-      setEditableCompletion(completion);
+    schema: JobSummaryCompetencySchema,
+    onFinish: (event) => {
+      setEditableJobSummary(event.object?.jobSummary || "");
+      setEditableCompetency(event.object?.competency || "");
     },
   });
 
   // useObjectでAPIと連携
   const {
-    object,
+    object: optionObject,
     submit: handleOptionSubmit,
     isLoading: optionLoading,
   } = useObject<OptionData>({
@@ -43,13 +58,14 @@ export default function Page() {
 
   // チップとして表示するオプション（ストリーミング中のデータをそのまま使用）
   const chipCandidates =
-    object?.options?.filter((opt): opt is string => Boolean(opt)) || [];
+    optionObject?.options?.filter((opt): opt is string => Boolean(opt)) || [];
 
   // オプション入力用の状態
   const [optionInput, setOptionInput] = useState("職種");
 
   // ユーザー編集用のstate
-  const [editableCompletion, setEditableCompletion] = useState("");
+  const [editableJobSummary, setEditableJobSummary] = useState("");
+  const [editableCompetency, setEditableCompetency] = useState("");
 
   return (
     <div className="flex flex-col gap-2">
@@ -61,10 +77,38 @@ export default function Page() {
               className="p-2 bg-zinc-100 text-black resize-none"
               style={{ width: "1000px" }}
               minRows={3}
-              value={isLoading ? completion : editableCompletion}
-              onChange={(e) => setEditableCompletion(e.target.value)}
+              value={
+                isLoading
+                  ? jobSummaryCompetencyObject?.jobSummary ?? ""
+                  : editableJobSummary
+              }
+              onChange={(e) => setEditableJobSummary(e.target.value)}
             />
-            {isLoading && !completion && (
+            {isLoading && !jobSummaryCompetencyObject?.jobSummary && (
+              <div
+                className="absolute left-0 top-0 w-full flex items-center justify-center pointer-events-none"
+                style={{ height: 72, background: "rgba(244,244,245,0.7)" }}
+              >
+                <div className="w-3/4 h-6 bg-zinc-300 animate-pulse rounded" />
+              </div>
+            )}
+          </div>
+        </div>
+        <div className="flex flex-row gap-2">
+          <div className="w-24 text-zinc-500">AI:</div>
+          <div className="w-full relative">
+            <TextareaAutosize
+              className="p-2 bg-zinc-100 text-black resize-none"
+              style={{ width: "1000px" }}
+              minRows={3}
+              value={
+                isLoading
+                  ? jobSummaryCompetencyObject?.competency ?? ""
+                  : editableCompetency
+              }
+              onChange={(e) => setEditableCompetency(e.target.value)}
+            />
+            {isLoading && !jobSummaryCompetencyObject?.competency && (
               <div
                 className="absolute left-0 top-0 w-full flex items-center justify-center pointer-events-none"
                 style={{ height: 72, background: "rgba(244,244,245,0.7)" }}
@@ -89,22 +133,14 @@ export default function Page() {
                   : "bg-zinc-200 text-zinc-700 hover:bg-zinc-300"
               } border border-zinc-300 transition`}
               onClick={() => {
-                // チップをクリックした際に入力欄へ反映し、そのまま送信も行う
-                setInput(candidate);
-                complete(candidate);
+                // チップをクリックした際にAPIへ送信
+                handleSubmit({ prompt: candidate });
               }}
             >
               {candidate}
             </button>
           ))}
         </div>
-        <input
-          value={input}
-          placeholder="Send message..."
-          onChange={handleInputChange}
-          className="w-full p-2 bg-zinc-100 text-black"
-          disabled={isLoading}
-        />
       </form>
       {/* オプション取得用フォーム */}
       <form
