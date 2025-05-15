@@ -17,22 +17,6 @@ export const OptionDataSchema = z.object({
 export type OptionData = z.infer<typeof OptionDataSchema>;
 
 export default function Page() {
-  // const {
-  //   completion,
-  //   input,
-  //   handleSubmit,
-  //   handleInputChange,
-  //   isLoading,
-  //   setInput,
-  //   complete,
-  // } = useCompletion({
-  //   api: "http://localhost:3100/api/v1/gpt",
-  //   initialInput: "",
-  //   streamProtocol: "text",
-  //   onFinish: (_prompt, completion) => {
-  //     setEditableCompletion(completion);
-  //   },
-  // });
   const {
     object: jobSummaryCompetencyObject,
     submit: handleSubmit,
